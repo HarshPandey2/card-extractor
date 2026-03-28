@@ -16,6 +16,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 - **AI**: Google Gemini 2.5 Flash (via Replit AI Integrations)
+- **Auth**: JWT (jsonwebtoken) + bcryptjs, role-based (user/admin)
 
 ## Project: Visiting Card Information Extractor
 
@@ -28,13 +29,23 @@ A web app where users upload or scan visiting cards and extract structured infor
 - AI extraction via Gemini 2.5 Flash
 - Editable extracted data fields
 - Download as JSON or CSV
-- Admin portal with JWT auth
-- Admin dashboard to view/search/delete card records
+- User authentication (signup/login via email+password)
+- Protected routes — unauthenticated users redirected to login
+- Admin dashboard: view/search/delete all cards + manage users
+- Role-based access control (user vs admin)
 
-### Admin Credentials
-- **Default admin**: username `admin`, password `admin123`
-- **Default superadmin**: username `superadmin`, password `super456`
-- Passwords can be overridden via `ADMIN_PASSWORD` and `SUPERADMIN_PASSWORD` env vars
+### Auth System
+- **Token key**: `authToken` in localStorage
+- **JWT payload**: `{ id, email, role }`
+- **Admin credentials**: `admin@cardextractor.com` / `admin123` (role = admin in DB)
+- **Regular users**: self-register at `/signup`
+- **Routes**: `/login`, `/signup`, `/` (protected), `/admin` (admin-only)
+
+### Frontend Pages
+- `/login` — Login with email + password
+- `/signup` — Create new account
+- `/` — Card extraction (protected, any auth user)
+- `/admin` — Admin dashboard with Cards + Users tabs (admin-only)
 
 ## Structure
 
@@ -70,17 +81,30 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | GET | /api/healthz | Health check | None |
-| POST | /api/extract | Extract card info from image(s) | None |
-| POST | /api/admin/login | Admin authentication | None |
-| GET | /api/admin/cards | List all extracted cards | JWT |
-| DELETE | /api/admin/cards/:id | Delete a card record | JWT |
+| POST | /api/auth/signup | Register new user | None |
+| POST | /api/auth/login | Login, returns JWT | None |
+| GET | /api/auth/me | Get current user profile | JWT |
+| POST | /api/extract | Extract card info from image(s) | JWT |
+| GET | /api/cards | List user's own extracted cards | JWT |
+| DELETE | /api/cards/:id | Delete user's own card | JWT |
+| GET | /api/admin/cards | List all cards (all users) | JWT+Admin |
+| DELETE | /api/admin/cards/:id | Delete any card | JWT+Admin |
+| GET | /api/admin/users | List all users with card counts | JWT+Admin |
 
 ## Database Schema
 
+### `users` table
+- `id` — serial primary key
+- `name` — text
+- `email` — text unique
+- `password_hash` — text (bcryptjs)
+- `role` — text ('user' | 'admin'), default 'user'
+- `created_at` — timestamp
+
 ### `cards` table
 - `id` — serial primary key
-- `name`, `company`, `designation`, `address`, `website` — text fields
-- `phones`, `emails` — jsonb arrays
+- `user_id` — FK → users.id (nullable for legacy)
+- `data` — jsonb (CardData: name, phones, emails, company, designation, address, website)
 - `front_image_base64`, `back_image_base64` — stored image data
 - `created_at` — timestamp
 
@@ -90,8 +114,6 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `AI_INTEGRATIONS_GEMINI_BASE_URL` — Gemini API proxy URL (auto-provisioned)
 - `AI_INTEGRATIONS_GEMINI_API_KEY` — Gemini API key (auto-provisioned)
 - `SESSION_SECRET` — JWT signing secret
-- `ADMIN_PASSWORD` — Override default admin password (optional)
-- `SUPERADMIN_PASSWORD` — Override default superadmin password (optional)
 - `PORT` — Server port (auto-assigned)
 
 ## Packages
@@ -100,19 +122,24 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 Express 5 API server with routes for card extraction and admin management.
 
-- Routes: `extract.ts`, `admin/login.ts`, `admin/cards.ts`
-- Middleware: `auth.ts` — JWT verification
+- Routes: `auth.ts`, `cards.ts`, `extract.ts`, `admin/cards.ts`, `admin/users.ts`
+- Middleware: `auth.ts` — `requireAuth` (any JWT), `requireAdmin` (admin role)
 - Depends on: `@workspace/db`, `@workspace/api-zod`, `@workspace/integrations-gemini-ai`
 
 ### `artifacts/card-extractor` (`@workspace/card-extractor`)
 
-React+Vite frontend with pages: Home (extraction), AdminLogin, AdminDashboard.
+React+Vite frontend.
+
+- Pages: `Login.tsx`, `Signup.tsx`, `Home.tsx` (extraction), `AdminDashboard.tsx`
+- Context: `AuthContext.tsx` — user/token state + login/logout helpers
+- Hooks: `use-admin.ts` — admin card/user data with auth headers
 
 ### `lib/db` (`@workspace/db`)
 
 Database layer using Drizzle ORM with PostgreSQL.
 
-- `src/schema/cards.ts` — cards table definition
+- `src/schema/users.ts` — users table
+- `src/schema/cards.ts` — cards table with userId FK
 - `drizzle.config.ts` — Drizzle Kit config
 
 Run migrations: `pnpm --filter @workspace/db run push`

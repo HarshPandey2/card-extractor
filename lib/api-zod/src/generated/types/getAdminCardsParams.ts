@@ -3,20 +3,11 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export type GetAdminCardsParams = {
-  /**
-   * Search by name, company, email, or phone
-   */
   search?: string;
-  /**
-   * Page number (1-indexed)
-   */
   page?: number;
-  /**
-   * Results per page
-   */
   limit?: number;
 };

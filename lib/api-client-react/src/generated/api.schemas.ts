@@ -3,10 +3,43 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
+}
+
+export interface SignupRequest {
+  name: string;
+  email: string;
+  /** @minLength 6 */
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export type UserProfileRole =
+  (typeof UserProfileRole)[keyof typeof UserProfileRole];
+
+export const UserProfileRole = {
+  user: "user",
+  admin: "admin",
+} as const;
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: UserProfileRole;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: UserProfile;
 }
 
 export interface CardData {
@@ -20,9 +53,7 @@ export interface CardData {
 }
 
 export interface ExtractCardRequest {
-  /** Base64 encoded front image (with data URI prefix) */
   frontImage: string;
-  /** Base64 encoded back image (optional, for double-sided cards) */
   backImage?: string;
 }
 
@@ -32,18 +63,10 @@ export interface ExtractCardResponse {
   createdAt: string;
 }
 
-export interface AdminLoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface AdminLoginResponse {
-  token: string;
-  username: string;
-}
-
 export interface CardRecord {
   id: string;
+  userId?: string;
+  userName?: string;
   data: CardData;
   frontImageUrl?: string;
   backImageUrl?: string;
@@ -57,6 +80,20 @@ export interface AdminCardsResponse {
   totalPages: number;
 }
 
+export interface AdminUserRecord {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  cardCount: number;
+  createdAt: string;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUserRecord[];
+  total: number;
+}
+
 export interface ErrorResponse {
   error: string;
   message: string;
@@ -67,17 +104,13 @@ export interface SuccessResponse {
   message: string;
 }
 
-export type GetAdminCardsParams = {
-  /**
-   * Search by name, company, email, or phone
-   */
-  search?: string;
-  /**
-   * Page number (1-indexed)
-   */
+export type GetUserCardsParams = {
   page?: number;
-  /**
-   * Results per page
-   */
+  limit?: number;
+};
+
+export type GetAdminCardsParams = {
+  search?: string;
+  page?: number;
   limit?: number;
 };

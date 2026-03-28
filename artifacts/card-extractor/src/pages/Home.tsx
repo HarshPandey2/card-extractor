@@ -1,26 +1,31 @@
 import { useState } from "react";
-import { Camera, SwitchCamera, AlertCircle, ArrowRight } from "lucide-react";
+import { Camera, AlertCircle, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { FileUploader } from "@/components/FileUploader";
 import { CameraCapture } from "@/components/CameraCapture";
 import { ExtractedDataForm } from "@/components/ExtractedDataForm";
-import { useExtractCard } from "@workspace/api-client-react";
-import { ExtractCardResponse } from "@workspace/api-client-react";
+import { useExtractCard, ExtractCardResponse } from "@workspace/api-client-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
+  const { token } = useAuth();
   const [doubleSided, setDoubleSided] = useState(false);
   const [frontImage, setFrontImage] = useState<string | null>(null);
   const [backImage, setBackImage] = useState<string | null>(null);
-  
   const [showCameraFor, setShowCameraFor] = useState<"front" | "back" | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractCardResponse | null>(null);
 
-  const { mutate: extractCard, isPending, error } = useExtractCard();
+  const { mutate: extractCard, isPending, error } = useExtractCard({
+    request: {
+      headers: {
+        Authorization: `Bearer ${token || ""}`,
+      },
+    },
+  });
 
   const handleProcess = () => {
     if (!frontImage) return;
-
     extractCard(
       { data: { frontImage, backImage: doubleSided ? backImage || undefined : undefined } },
       {
@@ -41,20 +46,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
-      {/* Background decorations */}
       <div className="absolute top-0 left-0 right-0 h-[500px] w-full z-0 overflow-hidden pointer-events-none">
-        <img 
-          src={`${import.meta.env.BASE_URL}images/hero-bg.png`} 
-          alt="" 
+        <img
+          src={`${import.meta.env.BASE_URL}images/hero-bg.png`}
+          alt=""
           className="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-overlay"
         />
-        <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-transparent to-background"></div>
+        <div className="absolute top-0 inset-x-0 h-full bg-gradient-to-b from-transparent to-background" />
       </div>
 
       <Navbar />
 
       <main className="relative z-10 mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        
         <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="inline-flex items-center justify-center rounded-full bg-primary/10 px-4 py-1.5 mb-6 border border-primary/20 text-sm font-semibold text-primary shadow-sm">
             AI-Powered Extraction
@@ -80,7 +83,6 @@ export default function Home() {
 
         {!extractedData ? (
           <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Mode Toggle */}
             <div className="flex justify-center">
               <div className="inline-flex items-center rounded-full border border-border bg-card p-1 shadow-sm">
                 <button
@@ -104,19 +106,14 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Upload Grids */}
             <div className={cn(
               "grid gap-6 transition-all duration-500",
               doubleSided ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 max-w-xl mx-auto"
             )}>
               <div className="space-y-4">
-                <FileUploader 
-                  image={frontImage} 
-                  onImageChange={setFrontImage} 
-                  label="Front Side" 
-                />
+                <FileUploader image={frontImage} onImageChange={setFrontImage} label="Front Side" />
                 {!frontImage && (
-                  <button 
+                  <button
                     onClick={() => setShowCameraFor("front")}
                     className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:border-primary/50 hover:bg-accent/10 transition-colors"
                   >
@@ -128,13 +125,9 @@ export default function Home() {
 
               {doubleSided && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <FileUploader 
-                    image={backImage} 
-                    onImageChange={setBackImage} 
-                    label="Back Side" 
-                  />
+                  <FileUploader image={backImage} onImageChange={setBackImage} label="Back Side" />
                   {!backImage && (
-                    <button 
+                    <button
                       onClick={() => setShowCameraFor("back")}
                       className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:border-primary/50 hover:bg-accent/10 transition-colors"
                     >
@@ -146,7 +139,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Actions */}
             {isReadyToProcess && (
               <div className="flex justify-center pt-6 animate-in slide-in-from-bottom-4">
                 <button
@@ -154,8 +146,8 @@ export default function Home() {
                   disabled={isPending}
                   className={cn(
                     "group relative flex items-center gap-2 rounded-full px-8 py-4 font-bold text-primary-foreground shadow-xl transition-all duration-300",
-                    isPending 
-                      ? "bg-primary/80 cursor-not-allowed scale-95" 
+                    isPending
+                      ? "bg-primary/80 cursor-not-allowed scale-95"
                       : "bg-primary hover:bg-primary/90 hover:shadow-primary/30 hover:-translate-y-1 active:translate-y-0"
                   )}
                 >
@@ -170,7 +162,6 @@ export default function Home() {
                       <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </>
                   )}
-                  
                   {isPending && (
                     <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
                       <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -196,7 +187,7 @@ export default function Home() {
       </main>
 
       {showCameraFor && (
-        <CameraCapture 
+        <CameraCapture
           label={showCameraFor === "front" ? "Front Side" : "Back Side"}
           onCancel={() => setShowCameraFor(null)}
           onCapture={(base64) => {

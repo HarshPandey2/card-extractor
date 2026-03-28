@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { ai } from "@workspace/integrations-gemini-ai";
 import { db, cardsTable } from "@workspace/db";
 import { ExtractCardBody } from "@workspace/api-zod";
+import { requireAuth, type AuthRequest } from "../middleware/auth.js";
 
 const router: IRouter = Router();
 
@@ -19,7 +20,7 @@ async function extractWithGemini(frontImageBase64: string, backImageBase64?: str
   const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
 
   parts.push({
-    text: `You are an expert at extracting information from visiting/business cards. 
+    text: `You are an expert at extracting information from visiting/business cards.
 Extract the structured information from the provided visiting card image(s) and return ONLY a valid JSON object with this exact structure:
 {
   "name": "full name of the person",
@@ -37,7 +38,7 @@ Rules:
 - For phones and emails, include all numbers/emails found
 - Merge information intelligently if multiple card sides are provided
 - Clean up any OCR noise or formatting artifacts
-- Normalize phone numbers but keep country codes if present`
+- Normalize phone numbers but keep country codes if present`,
   });
 
   const addImagePart = (dataUrl: string, label: string) => {
@@ -75,7 +76,7 @@ Rules:
   };
 }
 
-router.post("/extract", async (req, res) => {
+router.post("/extract", requireAuth, async (req: AuthRequest, res) => {
   const parsed = ExtractCardBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Bad Request", message: "Invalid request body" });
@@ -106,6 +107,7 @@ router.post("/extract", async (req, res) => {
   const [inserted] = await db
     .insert(cardsTable)
     .values({
+      userId: req.user!.id,
       name: cardData.name,
       phones: cardData.phones,
       emails: cardData.emails,

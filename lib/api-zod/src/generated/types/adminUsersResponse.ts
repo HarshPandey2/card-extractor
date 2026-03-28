@@ -5,8 +5,9 @@
  * Visiting Card Information Extractor API
  * OpenAPI spec version: 0.2.0
  */
+import type { AdminUserRecord } from "./adminUserRecord";
 
-export interface ErrorResponse {
-  error: string;
-  message: string;
+export interface AdminUsersResponse {
+  users: AdminUserRecord[];
+  total: number;
 }

@@ -1,12 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { 
+import {
   useGetAdminCards as useGeneratedGetAdminCards,
   useDeleteAdminCard as useGeneratedDeleteAdminCard,
-  getGetAdminCardsQueryKey
+  getGetAdminCardsQueryKey,
+  useGetAdminUsers as useGeneratedGetAdminUsers,
 } from "@workspace/api-client-react";
 
 function getAuthHeaders() {
-  const token = localStorage.getItem("adminToken");
+  const token = localStorage.getItem("authToken");
   return {
     headers: {
       Authorization: `Bearer ${token || ""}`,
@@ -18,28 +19,31 @@ export function useAdminCards(params: { search?: string; page?: number; limit?: 
   return useGeneratedGetAdminCards(params, {
     request: getAuthHeaders(),
     query: {
-      retry: false, // Don't retry on 401s
-    }
+      retry: false,
+    },
   });
 }
 
-export function useDeleteCard() {
+export function useAdminUsers() {
+  return useGeneratedGetAdminUsers({
+    request: getAuthHeaders(),
+    query: {
+      retry: false,
+    },
+  });
+}
+
+export function useDeleteAdminCard() {
   const queryClient = useQueryClient();
-  
+
   return useGeneratedDeleteAdminCard({
     request: getAuthHeaders(),
     mutation: {
       onSuccess: () => {
-        // Invalidate all admin cards queries
         queryClient.invalidateQueries({
           queryKey: [getGetAdminCardsQueryKey()[0]],
         });
       },
     },
   });
-}
-
-export function logout() {
-  localStorage.removeItem("adminToken");
-  window.location.href = "/admin/login";
 }

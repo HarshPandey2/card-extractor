@@ -1,0 +1,142 @@
+You are a senior full-stack developer. Update my existing Visiting Card Extraction web app by implementing a secure authentication and role-based access control system.
+
+🎯 GOAL:
+Ensure that:
+- Only logged-in users can upload visiting cards
+- Users can only see their own extracted cards
+- Only admins (maximum 2) can access all extracted cards and manage data
+
+--------------------------------------------------
+
+🔐 AUTHENTICATION REQUIREMENTS:
+
+1. Implement JWT-based authentication
+2. Create user login & signup system:
+   - Fields: name, email, password
+   - Password must be hashed using bcrypt
+3. Store JWT token on client side
+4. Protect all private routes using middleware
+
+--------------------------------------------------
+
+👑 ADMIN SYSTEM:
+
+1. There should be ONLY 2 admin users
+2. Admins can be:
+   - Predefined in database OR
+   - Assigned role: "admin"
+3. Admin capabilities:
+   - View all extracted cards
+   - Delete any card
+   - Access admin dashboard
+
+--------------------------------------------------
+
+👤 USER SYSTEM:
+
+1. Normal users can:
+   - Upload visiting cards
+   - View ONLY their uploaded cards
+   - Edit extracted data
+2. Users should NOT:
+   - Access other users' data
+   - Access admin APIs
+
+--------------------------------------------------
+
+🧠 ROLE-BASED ACCESS CONTROL:
+
+Implement middleware:
+
+1. authMiddleware:
+   - Verifies JWT
+   - Attaches user info to request
+
+2. adminMiddleware:
+   - Checks if user role === "admin"
+   - Denies access otherwise
+
+--------------------------------------------------
+
+📂 DATABASE CHANGES:
+
+User Schema:
+- name
+- email (unique)
+- password (hashed)
+- role ("user" or "admin")
+
+Card Schema:
+- userId (reference to User)
+- extractedData (JSON)
+- createdAt
+
+--------------------------------------------------
+
+🔗 API STRUCTURE:
+
+AUTH ROUTES:
+POST /api/auth/signup
+POST /api/auth/login
+
+USER ROUTES:
+POST /api/extract → only logged-in users
+GET /api/cards → only user’s own cards
+
+ADMIN ROUTES:
+GET /api/admin/cards → admin only
+DELETE /api/admin/card/:id → admin only
+
+--------------------------------------------------
+
+🔒 SECURITY:
+
+- Validate all inputs
+- Hash passwords with bcrypt
+- Use JWT secret from environment variables
+- Prevent unauthorized access
+- Handle token expiration
+
+--------------------------------------------------
+
+🎨 FRONTEND REQUIREMENTS:
+
+1. Create:
+   - Login page
+   - Signup page
+
+2. Store JWT token in localStorage
+
+3. Attach token in API calls:
+   Authorization: Bearer <token>
+
+4. Restrict UI:
+   - Hide admin dashboard for normal users
+   - Redirect unauthenticated users to login
+
+--------------------------------------------------
+
+🧪 VALIDATION LOGIC:
+
+- Prevent duplicate emails
+- Validate email format
+- Minimum password length (6+)
+
+--------------------------------------------------
+
+🚀 OUTPUT REQUIRED:
+
+- Backend code (controllers, routes, middleware)
+- Updated models
+- Frontend auth pages (React)
+- Example API usage
+- Step-by-step integration guide
+
+--------------------------------------------------
+
+IMPORTANT:
+
+- Keep code modular and clean
+- Follow MVC structure
+- Do not break existing extraction functionality
+- Ensure scalability and real-world standards

@@ -5,14 +5,12 @@
  * Visiting Card Information Extractor API
  * OpenAPI spec version: 0.2.0
  */
-import type { CardData } from "./cardData";
+import type { UserProfileRole } from "./userProfileRole";
 
-export interface CardRecord {
+export interface UserProfile {
   id: string;
-  userId?: string;
-  userName?: string;
-  data: CardData;
-  frontImageUrl?: string;
-  backImageUrl?: string;
+  name: string;
+  email: string;
+  role: UserProfileRole;
   createdAt: string;
 }

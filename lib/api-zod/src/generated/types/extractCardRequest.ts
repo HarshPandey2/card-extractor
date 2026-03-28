@@ -3,12 +3,10 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface ExtractCardRequest {
-  /** Base64 encoded front image (with data URI prefix) */
   frontImage: string;
-  /** Base64 encoded back image (optional, for double-sided cards) */
   backImage?: string;
 }

@@ -1,21 +1,19 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, or, sql } from "drizzle-orm";
-import { db, cardsTable } from "@workspace/db";
-import { GetAdminCardsQueryParams, DeleteAdminCardParams } from "@workspace/api-zod";
-import { requireAuth, type AuthRequest } from "../../middleware/auth.js";
+import { db, cardsTable, usersTable } from "@workspace/db";
+import { requireAdmin, type AuthRequest } from "../../middleware/auth.js";
 
 const router: IRouter = Router();
 
-router.get("/admin/cards", requireAuth, async (req: AuthRequest, res) => {
-  const parsed = GetAdminCardsQueryParams.safeParse(req.query);
-  const search = parsed.success ? parsed.data.search : undefined;
-  const page = (parsed.success && parsed.data.page) ? Number(parsed.data.page) : 1;
-  const limit = (parsed.success && parsed.data.limit) ? Number(parsed.data.limit) : 20;
+router.get("/admin/cards", requireAdmin, async (req: AuthRequest, res) => {
+  const search = String(req.query.search || "").trim();
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
   const offset = (page - 1) * limit;
 
   let whereClause;
-  if (search && search.trim()) {
-    const q = `%${search.trim()}%`;
+  if (search) {
+    const q = `%${search}%`;
     whereClause = or(
       ilike(cardsTable.name, q),
       ilike(cardsTable.company, q),
@@ -26,8 +24,21 @@ router.get("/admin/cards", requireAuth, async (req: AuthRequest, res) => {
 
   const [cards, countResult] = await Promise.all([
     db
-      .select()
+      .select({
+        id: cardsTable.id,
+        userId: cardsTable.userId,
+        userName: usersTable.name,
+        name: cardsTable.name,
+        phones: cardsTable.phones,
+        emails: cardsTable.emails,
+        company: cardsTable.company,
+        designation: cardsTable.designation,
+        address: cardsTable.address,
+        website: cardsTable.website,
+        createdAt: cardsTable.createdAt,
+      })
       .from(cardsTable)
+      .leftJoin(usersTable, eq(cardsTable.userId, usersTable.id))
       .where(whereClause)
       .orderBy(sql`${cardsTable.createdAt} DESC`)
       .limit(limit)
@@ -44,6 +55,8 @@ router.get("/admin/cards", requireAuth, async (req: AuthRequest, res) => {
   res.json({
     cards: cards.map((c) => ({
       id: String(c.id),
+      userId: c.userId ? String(c.userId) : undefined,
+      userName: c.userName || "Unknown",
       data: {
         name: c.name,
         phones: c.phones as string[],
@@ -53,8 +66,6 @@ router.get("/admin/cards", requireAuth, async (req: AuthRequest, res) => {
         address: c.address,
         website: c.website,
       },
-      frontImageUrl: c.frontImageBase64 ? `/api/admin/cards/${c.id}/image/front` : undefined,
-      backImageUrl: c.backImageBase64 ? `/api/admin/cards/${c.id}/image/back` : undefined,
       createdAt: c.createdAt.toISOString(),
     })),
     total,
@@ -63,14 +74,8 @@ router.get("/admin/cards", requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-router.delete("/admin/cards/:id", requireAuth, async (req: AuthRequest, res) => {
-  const parsed = DeleteAdminCardParams.safeParse(req.params);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Bad Request", message: "Invalid card ID" });
-    return;
-  }
-
-  const id = Number(parsed.data.id);
+router.delete("/admin/cards/:id", requireAdmin, async (req: AuthRequest, res) => {
+  const id = Number(req.params.id);
   if (isNaN(id)) {
     res.status(400).json({ error: "Bad Request", message: "Card ID must be a number" });
     return;

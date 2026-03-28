@@ -3,10 +3,10 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
-export interface AdminLoginResponse {
-  token: string;
-  username: string;
-}
+export type GetUserCardsParams = {
+  page?: number;
+  limit?: number;
+};

@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -16,17 +15,52 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * Accepts one or two base64 card images and returns structured extracted data
+ * @summary Register a new user
+ */
+export const authSignupBodyPasswordMin = 6;
+
+export const AuthSignupBody = zod.object({
+  name: zod.string(),
+  email: zod.string().email(),
+  password: zod.string().min(authSignupBodyPasswordMin),
+});
+
+/**
+ * @summary Login with email and password
+ */
+export const AuthLoginBody = zod.object({
+  email: zod.string().email(),
+  password: zod.string(),
+});
+
+export const AuthLoginResponse = zod.object({
+  token: zod.string(),
+  user: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    email: zod.string(),
+    role: zod.enum(["user", "admin"]),
+    createdAt: zod.string(),
+  }),
+});
+
+/**
+ * @summary Get current logged-in user info
+ */
+export const AuthMeResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  email: zod.string(),
+  role: zod.enum(["user", "admin"]),
+  createdAt: zod.string(),
+});
+
+/**
  * @summary Extract information from a visiting card image
  */
 export const ExtractCardBody = zod.object({
-  frontImage: zod
-    .string()
-    .describe("Base64 encoded front image (with data URI prefix)"),
-  backImage: zod
-    .string()
-    .optional()
-    .describe("Base64 encoded back image (optional, for double-sided cards)"),
+  frontImage: zod.string(),
+  backImage: zod.string().optional(),
 });
 
 export const ExtractCardResponse = zod.object({
@@ -44,34 +78,19 @@ export const ExtractCardResponse = zod.object({
 });
 
 /**
- * @summary Admin login
+ * @summary Get current user's own extracted cards
  */
-export const AdminLoginBody = zod.object({
-  username: zod.string(),
-  password: zod.string(),
+export const GetUserCardsQueryParams = zod.object({
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
 });
 
-export const AdminLoginResponse = zod.object({
-  token: zod.string(),
-  username: zod.string(),
-});
-
-/**
- * @summary Get all extracted cards
- */
-export const GetAdminCardsQueryParams = zod.object({
-  search: zod.coerce
-    .string()
-    .optional()
-    .describe("Search by name, company, email, or phone"),
-  page: zod.coerce.number().optional().describe("Page number (1-indexed)"),
-  limit: zod.coerce.number().optional().describe("Results per page"),
-});
-
-export const GetAdminCardsResponse = zod.object({
+export const GetUserCardsResponse = zod.object({
   cards: zod.array(
     zod.object({
       id: zod.string(),
+      userId: zod.string().optional(),
+      userName: zod.string().optional(),
       data: zod.object({
         name: zod.string(),
         phones: zod.array(zod.string()),
@@ -92,7 +111,53 @@ export const GetAdminCardsResponse = zod.object({
 });
 
 /**
- * @summary Delete a specific card record
+ * @summary Delete one of the current user's own cards
+ */
+export const DeleteUserCardParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const DeleteUserCardResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string(),
+});
+
+/**
+ * @summary Get all extracted cards (admin only)
+ */
+export const GetAdminCardsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const GetAdminCardsResponse = zod.object({
+  cards: zod.array(
+    zod.object({
+      id: zod.string(),
+      userId: zod.string().optional(),
+      userName: zod.string().optional(),
+      data: zod.object({
+        name: zod.string(),
+        phones: zod.array(zod.string()),
+        emails: zod.array(zod.string()),
+        company: zod.string(),
+        designation: zod.string(),
+        address: zod.string(),
+        website: zod.string(),
+      }),
+      frontImageUrl: zod.string().optional(),
+      backImageUrl: zod.string().optional(),
+      createdAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Delete any card (admin only)
  */
 export const DeleteAdminCardParams = zod.object({
   id: zod.coerce.string(),
@@ -101,4 +166,21 @@ export const DeleteAdminCardParams = zod.object({
 export const DeleteAdminCardResponse = zod.object({
   success: zod.boolean(),
   message: zod.string(),
+});
+
+/**
+ * @summary Get all users (admin only)
+ */
+export const GetAdminUsersResponse = zod.object({
+  users: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      email: zod.string(),
+      role: zod.string(),
+      cardCount: zod.number(),
+      createdAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
 });
