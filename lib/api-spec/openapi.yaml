@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Visiting Card Information Extractor API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: extract
+    description: Card extraction operations
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
@@ -24,7 +27,141 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /extract:
+    post:
+      operationId: extractCard
+      tags: [extract]
+      summary: Extract information from a visiting card image
+      description: Accepts one or two base64 card images and returns structured extracted data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractCardRequest"
+      responses:
+        "200":
+          description: Extraction successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractCardResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/cards:
+    get:
+      operationId: getAdminCards
+      tags: [admin]
+      summary: Get all extracted cards
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search by name, company, email, or phone
+        - in: query
+          name: page
+          schema:
+            type: number
+          description: Page number (1-indexed)
+        - in: query
+          name: limit
+          schema:
+            type: number
+          description: Results per page
+      responses:
+        "200":
+          description: Cards retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCardsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/cards/{id}:
+    delete:
+      operationId: deleteAdminCard
+      tags: [admin]
+      summary: Delete a specific card record
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Card deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +171,139 @@ components:
       required:
         - status
 
+    CardData:
+      type: object
+      properties:
+        name:
+          type: string
+        phones:
+          type: array
+          items:
+            type: string
+        emails:
+          type: array
+          items:
+            type: string
+        company:
+          type: string
+        designation:
+          type: string
+        address:
+          type: string
+        website:
+          type: string
+      required:
+        - name
+        - phones
+        - emails
+        - company
+        - designation
+        - address
+        - website
+
+    ExtractCardRequest:
+      type: object
+      properties:
+        frontImage:
+          type: string
+          description: Base64 encoded front image (with data URI prefix)
+        backImage:
+          type: string
+          description: Base64 encoded back image (optional, for double-sided cards)
+      required:
+        - frontImage
+
+    ExtractCardResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        data:
+          $ref: "#/components/schemas/CardData"
+        createdAt:
+          type: string
+      required:
+        - id
+        - data
+        - createdAt
+
+    AdminLoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    AdminLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+      required:
+        - token
+        - username
+
+    CardRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        data:
+          $ref: "#/components/schemas/CardData"
+        frontImageUrl:
+          type: string
+        backImageUrl:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - data
+        - createdAt
+
+    AdminCardsResponse:
+      type: object
+      properties:
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardRecord"
+        total:
+          type: number
+        page:
+          type: number
+        totalPages:
+          type: number
+      required:
+        - cards
+        - total
+        - page
+        - totalPages
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message

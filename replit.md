@@ -15,82 +15,114 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **AI**: Google Gemini 2.5 Flash (via Replit AI Integrations)
+
+## Project: Visiting Card Information Extractor
+
+A web app where users upload or scan visiting cards and extract structured information using AI.
+
+### Features
+- Upload front/back of visiting cards (drag & drop or file browse)
+- Live camera capture (WebRTC)
+- Single-sided and double-sided card extraction
+- AI extraction via Gemini 2.5 Flash
+- Editable extracted data fields
+- Download as JSON or CSV
+- Admin portal with JWT auth
+- Admin dashboard to view/search/delete card records
+
+### Admin Credentials
+- **Default admin**: username `admin`, password `admin123`
+- **Default superadmin**: username `superadmin`, password `super456`
+- Passwords can be overridden via `ADMIN_PASSWORD` and `SUPERADMIN_PASSWORD` env vars
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── artifacts/
+│   ├── api-server/         # Express API server
+│   └── card-extractor/     # React+Vite frontend
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+│   ├── db/                 # Drizzle ORM schema + DB connection
+│   └── integrations-gemini-ai/  # Gemini AI integration
+├── scripts/                # Utility scripts
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── tsconfig.json
+└── package.json
 ```
 
 ## TypeScript & Composite Projects
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
-
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references.
 
 ## Root Scripts
 
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## API Endpoints
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | /api/healthz | Health check | None |
+| POST | /api/extract | Extract card info from image(s) | None |
+| POST | /api/admin/login | Admin authentication | None |
+| GET | /api/admin/cards | List all extracted cards | JWT |
+| DELETE | /api/admin/cards/:id | Delete a card record | JWT |
+
+## Database Schema
+
+### `cards` table
+- `id` — serial primary key
+- `name`, `company`, `designation`, `address`, `website` — text fields
+- `phones`, `emails` — jsonb arrays
+- `front_image_base64`, `back_image_base64` — stored image data
+- `created_at` — timestamp
+
+## Environment Variables
+
+- `DATABASE_URL` — PostgreSQL connection string (auto-provisioned)
+- `AI_INTEGRATIONS_GEMINI_BASE_URL` — Gemini API proxy URL (auto-provisioned)
+- `AI_INTEGRATIONS_GEMINI_API_KEY` — Gemini API key (auto-provisioned)
+- `SESSION_SECRET` — JWT signing secret
+- `ADMIN_PASSWORD` — Override default admin password (optional)
+- `SUPERADMIN_PASSWORD` — Override default superadmin password (optional)
+- `PORT` — Server port (auto-assigned)
+
 ## Packages
 
 ### `artifacts/api-server` (`@workspace/api-server`)
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+Express 5 API server with routes for card extraction and admin management.
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+- Routes: `extract.ts`, `admin/login.ts`, `admin/cards.ts`
+- Middleware: `auth.ts` — JWT verification
+- Depends on: `@workspace/db`, `@workspace/api-zod`, `@workspace/integrations-gemini-ai`
+
+### `artifacts/card-extractor` (`@workspace/card-extractor`)
+
+React+Vite frontend with pages: Home (extraction), AdminLogin, AdminDashboard.
 
 ### `lib/db` (`@workspace/db`)
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
+Database layer using Drizzle ORM with PostgreSQL.
 
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
+- `src/schema/cards.ts` — cards table definition
+- `drizzle.config.ts` — Drizzle Kit config
 
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
+Run migrations: `pnpm --filter @workspace/db run push`
 
 ### `lib/api-spec` (`@workspace/api-spec`)
 
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
+Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config.
 
 Run codegen: `pnpm --filter @workspace/api-spec run codegen`
 
-### `lib/api-zod` (`@workspace/api-zod`)
+### `lib/integrations-gemini-ai` (`@workspace/integrations-gemini-ai`)
 
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+Gemini AI SDK client + batch utilities + image generation.

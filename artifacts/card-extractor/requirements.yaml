@@ -1,0 +1,19 @@
+packages:
+  "framer-motion": "For smooth page transitions and micro-interactions"
+  "react-dropzone": "For handling drag and drop image uploads"
+  "papaparse": "For client-side CSV generation"
+  "@types/papaparse": "TypeScript definitions for papaparse"
+  "react-hook-form": "For robust form state management"
+
+images:
+  - path: "artifacts/card-extractor/public/images/hero-bg.png"
+    description: "Abstract modern geometric background with deep slate, indigo, and soft violet gradients, very subtle blur and grain texture, tech/AI vibe"
+    aspect_ratio: "16:9"
+  - path: "artifacts/card-extractor/public/images/logo.png"
+    description: "Minimalist abstract logo for a smart data extraction app, clean geometric shapes overlapping, vibrant indigo and violet on transparent background"
+    aspect_ratio: "1:1"
+
+notes:
+  - Using navigator.mediaDevices.getUserMedia for native WebRTC camera capture.
+  - Orval React Query hooks are imported from @workspace/api-client-react.
+  - Auth tokens are stored in localStorage and attached to request headers via the hook's request options.

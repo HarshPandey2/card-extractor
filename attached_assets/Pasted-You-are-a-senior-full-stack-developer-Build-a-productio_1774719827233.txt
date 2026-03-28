@@ -1,0 +1,182 @@
+You are a senior full-stack developer. Build a production-ready web application for a "Visiting Card Information Extractor" with modern UI and scalable backend.
+
+🎯 PROJECT GOAL:
+A web app where users can upload or scan visiting cards (single-sided or double-sided), and the system extracts structured information like name, phone, email, company, etc.
+
+--------------------------------------------------
+
+🧩 CORE FEATURES:
+
+1. USER FEATURES:
+- Upload visiting card images (JPG, PNG)
+- Support:
+  - Single-sided card extraction
+  - Double-sided card extraction (upload 2 images → merge data intelligently)
+- Live camera capture (mobile + desktop webcam support)
+- Preview uploaded image before processing
+- Show extracted data in structured format:
+  - Name
+  - Phone Number(s)
+  - Email(s)
+  - Company Name
+  - Designation
+  - Address
+  - Website
+- Allow user to edit extracted data manually
+- Download/save as:
+  - JSON
+  - CSV
+- Clean UI inspired by modern apps (like Notion / Zepto style)
+
+--------------------------------------------------
+
+🧠 AI / OCR REQUIREMENTS:
+
+- Use FREE APIs only (NO paid APIs)
+- Preferred OCR:
+  - Google Gemini Flash 1.5 (for fast image understanding)
+- Fallback OCR:
+  - Tesseract.js (client-side)
+- Data extraction:
+  - Use LLM to structure raw OCR text into JSON
+- Ensure accuracy:
+  - Merge duplicate fields from front/back intelligently
+  - Remove noise text
+
+--------------------------------------------------
+
+🔐 AUTHENTICATION & ADMIN:
+
+- Admin login system (ONLY 2 admins allowed)
+- Use JWT-based authentication
+- Admin capabilities:
+  - View all uploaded cards
+  - View extracted data
+  - Delete records
+- No public signup required (only users accessing extraction)
+
+--------------------------------------------------
+
+📸 CAMERA FEATURE:
+
+- Implement live camera using WebRTC (getUserMedia)
+- Capture photo and process directly
+- Add "Retake" option
+
+--------------------------------------------------
+
+⚙️ TECH STACK:
+
+Frontend:
+- React.js (with Vite)
+- Tailwind CSS
+- Axios
+
+Backend:
+- Node.js + Express.js
+
+Database:
+- MongoDB Atlas
+
+--------------------------------------------------
+
+📂 PROJECT STRUCTURE:
+
+- client/
+  - components/
+  - pages/
+  - services/
+  - utils/
+
+- server/
+  - controllers/
+  - routes/
+  - models/
+  - middleware/
+
+--------------------------------------------------
+
+🧪 API ENDPOINTS:
+
+POST /api/extract
+- Accept image(s)
+- Return extracted structured data
+
+POST /api/admin/login
+- Authenticate admin
+
+GET /api/admin/cards
+- Get all extracted cards
+
+DELETE /api/admin/card/:id
+- Delete specific record
+
+--------------------------------------------------
+
+🧾 DATA FORMAT:
+
+Return structured JSON like:
+
+{
+  "name": "",
+  "phones": [],
+  "emails": [],
+  "company": "",
+  "designation": "",
+  "address": "",
+  "website": ""
+}
+
+--------------------------------------------------
+
+🎨 UI/UX REQUIREMENTS:
+
+- Responsive (mobile + desktop)
+- Drag & drop upload
+- Card preview UI
+- Loading animation during processing
+- Success + error states
+- Clean dashboard for admin
+
+--------------------------------------------------
+
+🔒 SECURITY:
+
+- Validate file uploads
+- Limit file size
+- Sanitize inputs
+- Protect admin routes
+
+--------------------------------------------------
+
+🚀 DEPLOYMENT:
+
+- Frontend: Vercel / Netlify
+- Backend: Render / Railway
+- Database: MongoDB Atlas
+
+--------------------------------------------------
+
+🧠 BONUS FEATURES (IF POSSIBLE):
+
+- Auto-detect card orientation
+- Multi-language card support
+- Dark mode UI
+- Search extracted cards (admin panel)
+
+--------------------------------------------------
+
+📌 FINAL OUTPUT:
+
+- Complete working code (frontend + backend)
+- .env setup guide
+- Deployment instructions
+- Sample test images
+
+--------------------------------------------------
+
+IMPORTANT:
+- Code should be clean, modular, and production-ready
+- Avoid unnecessary complexity
+- Use only FREE tools/APIs
+- Prioritize performance and fast response
