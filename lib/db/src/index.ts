@@ -95,6 +95,9 @@ function getDbName() {
 async function getClient() {
   if (!clientPromise) {
     const uri = getMongoUri();
+
+    console.log("Mongo URI:", uri); // 👈 DEBUG LINE ADDED
+
     const client = new MongoClient(uri, {
       serverApi: {
         version: ServerApiVersion.v1,
@@ -106,6 +109,8 @@ async function getClient() {
 
   return clientPromise;
 }
+
+  
 
 async function getDatabase() {
   if (!dbPromise) {
