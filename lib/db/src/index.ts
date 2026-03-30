@@ -110,8 +110,7 @@ async function getClient() {
   return clientPromise;
 }
 
-  return clientPromise;
-}
+  
 
 async function getDatabase() {
   if (!dbPromise) {
