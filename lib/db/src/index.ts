@@ -85,6 +85,15 @@ function getMongoUri() {
   if (!uri.startsWith("mongodb://") && !uri.startsWith("mongodb+srv://")) {
     throw new Error("DATABASE_URL must be a valid MongoDB connection string.");
   }
+  if (uri.startsWith("mongodb+srv://")) {
+    const hostMatch = uri.match(/^mongodb\+srv:\/\/(?:[^@/]+@)?([^/?]+)/);
+    const hostSegment = hostMatch?.[1] ?? "";
+    if (/:\d+$/.test(hostSegment)) {
+      throw new Error(
+        "DATABASE_URL uses mongodb+srv://, so it must not include a port number. Remove :27017 (or any other port) from the host.",
+      );
+    }
+  }
   return uri;
 }
 
