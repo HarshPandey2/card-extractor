@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.4.0
  */
 import type { CardData } from "./cardData";
 
@@ -12,7 +12,5 @@ export interface CardRecord {
   userId?: string;
   userName?: string;
   data: CardData;
-  frontImageUrl?: string;
-  backImageUrl?: string;
   createdAt: string;
 }

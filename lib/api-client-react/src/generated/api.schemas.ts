@@ -3,17 +3,10 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.4.0
  */
 export interface HealthStatus {
   status: string;
-}
-
-export interface SignupRequest {
-  name: string;
-  email: string;
-  /** @minLength 6 */
-  password: string;
 }
 
 export interface LoginRequest {
@@ -34,6 +27,7 @@ export interface UserProfile {
   name: string;
   email: string;
   role: UserProfileRole;
+  isVerified: boolean;
   createdAt: string;
 }
 
@@ -68,12 +62,10 @@ export interface CardRecord {
   userId?: string;
   userName?: string;
   data: CardData;
-  frontImageUrl?: string;
-  backImageUrl?: string;
   createdAt: string;
 }
 
-export interface AdminCardsResponse {
+export interface CardsResponse {
   cards: CardRecord[];
   total: number;
   page: number;
@@ -85,6 +77,7 @@ export interface AdminUserRecord {
   name: string;
   email: string;
   role: string;
+  isVerified: boolean;
   cardCount: number;
   createdAt: string;
 }

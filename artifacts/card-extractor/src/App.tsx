@@ -8,7 +8,7 @@ import NotFound from "@/pages/not-found";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient({
@@ -20,16 +20,31 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({ component: Component, adminOnly = false }: { component: React.ComponentType; adminOnly?: boolean }) {
+function ProtectedRoute({
+  component: Component,
+  role = "any",
+}: {
+  component: React.ComponentType;
+  role?: "any" | "user" | "admin";
+}) {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!isLoading) {
-      if (!isAuthenticated) setLocation("/login");
-      else if (adminOnly && !isAdmin) setLocation("/");
+      if (!isAuthenticated) {
+        setLocation(role === "admin" ? "/admin/login" : "/login");
+        return;
+      }
+      if (role === "admin" && !isAdmin) {
+        setLocation("/");
+        return;
+      }
+      if (role === "user" && isAdmin) {
+        setLocation("/admin");
+      }
     }
-  }, [isAuthenticated, isAdmin, isLoading, adminOnly, setLocation]);
+  }, [isAuthenticated, isAdmin, isLoading, role, setLocation]);
 
   if (isLoading) {
     return (
@@ -40,7 +55,8 @@ function ProtectedRoute({ component: Component, adminOnly = false }: { component
   }
 
   if (!isAuthenticated) return null;
-  if (adminOnly && !isAdmin) return null;
+  if (role === "admin" && !isAdmin) return null;
+  if (role === "user" && isAdmin) return null;
 
   return <Component />;
 }
@@ -48,10 +64,10 @@ function ProtectedRoute({ component: Component, adminOnly = false }: { component
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={() => <ProtectedRoute component={Home} />} />
+      <Route path="/" component={() => <ProtectedRoute component={Home} role="user" />} />
       <Route path="/login" component={Login} />
-      <Route path="/signup" component={Signup} />
-      <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} adminOnly />} />
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} role="admin" />} />
       <Route component={NotFound} />
     </Switch>
   );

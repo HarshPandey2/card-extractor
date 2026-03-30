@@ -256,6 +256,7 @@ export default function AdminDashboard() {
                       <th className="text-left px-4 py-3 font-semibold text-foreground">Name</th>
                       <th className="text-left px-4 py-3 font-semibold text-foreground">Email</th>
                       <th className="text-left px-4 py-3 font-semibold text-foreground">Role</th>
+                      <th className="text-left px-4 py-3 font-semibold text-foreground">Verified</th>
                       <th className="text-left px-4 py-3 font-semibold text-foreground">Cards</th>
                       <th className="text-left px-4 py-3 font-semibold text-foreground">Joined</th>
                     </tr>
@@ -272,6 +273,15 @@ export default function AdminDashboard() {
                               : "bg-secondary text-secondary-foreground"
                           }`}>
                             {user.role}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            user.isVerified
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}>
+                            {user.isVerified ? "Verified" : "Pending"}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{user.cardCount}</td>

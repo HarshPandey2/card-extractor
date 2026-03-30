@@ -8,6 +8,9 @@
     "./batch": "./src/batch/index.ts",
     "./image": "./src/image/index.ts"
   },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  },
   "dependencies": {
     "@google/genai": "^1.44.0",
     "p-limit": "^7.3.0",

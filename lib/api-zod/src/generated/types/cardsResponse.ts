@@ -3,11 +3,11 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.4.0
  */
 import type { CardRecord } from "./cardRecord";
 
-export interface AdminCardsResponse {
+export interface CardsResponse {
   cards: CardRecord[];
   total: number;
   page: number;

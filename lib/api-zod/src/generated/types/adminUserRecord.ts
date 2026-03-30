@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.4.0
  */
 
 export interface AdminUserRecord {
@@ -11,6 +11,7 @@ export interface AdminUserRecord {
   name: string;
   email: string;
   role: string;
+  isVerified: boolean;
   cardCount: number;
   createdAt: string;
 }

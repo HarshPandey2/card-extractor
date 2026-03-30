@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.4.0
  */
 import * as zod from "zod";
 
@@ -15,18 +15,7 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * @summary Register a new user
- */
-export const authSignupBodyPasswordMin = 6;
-
-export const AuthSignupBody = zod.object({
-  name: zod.string(),
-  email: zod.string().email(),
-  password: zod.string().min(authSignupBodyPasswordMin),
-});
-
-/**
- * @summary Login with email and password
+ * @summary Login using the pre-configured client account
  */
 export const AuthLoginBody = zod.object({
   email: zod.string().email(),
@@ -40,6 +29,7 @@ export const AuthLoginResponse = zod.object({
     name: zod.string(),
     email: zod.string(),
     role: zod.enum(["user", "admin"]),
+    isVerified: zod.boolean(),
     createdAt: zod.string(),
   }),
 });
@@ -52,6 +42,7 @@ export const AuthMeResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   role: zod.enum(["user", "admin"]),
+  isVerified: zod.boolean(),
   createdAt: zod.string(),
 });
 
@@ -100,8 +91,6 @@ export const GetUserCardsResponse = zod.object({
         address: zod.string(),
         website: zod.string(),
       }),
-      frontImageUrl: zod.string().optional(),
-      backImageUrl: zod.string().optional(),
       createdAt: zod.string(),
     }),
   ),
@@ -120,6 +109,26 @@ export const DeleteUserCardParams = zod.object({
 export const DeleteUserCardResponse = zod.object({
   success: zod.boolean(),
   message: zod.string(),
+});
+
+/**
+ * @summary Login as the pre-configured admin
+ */
+export const AdminLoginBody = zod.object({
+  email: zod.string().email(),
+  password: zod.string(),
+});
+
+export const AdminLoginResponse = zod.object({
+  token: zod.string(),
+  user: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    email: zod.string(),
+    role: zod.enum(["user", "admin"]),
+    isVerified: zod.boolean(),
+    createdAt: zod.string(),
+  }),
 });
 
 /**
@@ -146,8 +155,6 @@ export const GetAdminCardsResponse = zod.object({
         address: zod.string(),
         website: zod.string(),
       }),
-      frontImageUrl: zod.string().optional(),
-      backImageUrl: zod.string().optional(),
       createdAt: zod.string(),
     }),
   ),
@@ -178,6 +185,7 @@ export const GetAdminUsersResponse = zod.object({
       name: zod.string(),
       email: zod.string(),
       role: zod.string(),
+      isVerified: zod.boolean(),
       cardCount: zod.number(),
       createdAt: zod.string(),
     }),

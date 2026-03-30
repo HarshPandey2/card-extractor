@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Lock, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuthLogin } from "@workspace/api-client-react";
+import { ApiError, useAuthLogin } from "@workspace/api-client-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -27,15 +27,16 @@ export default function Login() {
             name: res.user.name,
             email: res.user.email,
             role: res.user.role as "user" | "admin",
+            isVerified: res.user.isVerified,
           });
-          if (res.user.role === "admin") {
-            setLocation("/admin");
-          } else {
-            setLocation("/");
-          }
+          setLocation("/");
         },
-        onError: () => {
-          setErrorMsg("Invalid email or password. Please try again.");
+        onError: (error) => {
+          const message =
+            error instanceof ApiError && error.data && typeof error.data === "object"
+              ? String((error.data as { message?: string }).message || "")
+              : "";
+          setErrorMsg(message || "Invalid email or password. Please try again.");
         },
       }
     );
@@ -55,10 +56,10 @@ export default function Login() {
           </div>
         </div>
         <h2 className="text-center font-display text-3xl font-bold tracking-tight text-foreground">
-          Welcome back
+          Client login
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Sign in to your account to continue
+          Sign in with the configured client account to continue
         </p>
       </div>
 
@@ -133,10 +134,10 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link href="/signup" className="font-semibold text-primary hover:underline underline-offset-4">
-                Create one
+            <p className="mt-3 text-sm text-muted-foreground">
+              Are you an admin?{" "}
+              <Link href="/admin/login" className="font-semibold text-primary hover:underline underline-offset-4">
+                Use admin login
               </Link>
             </p>
           </div>

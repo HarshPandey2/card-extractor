@@ -105,16 +105,16 @@ export function Navbar() {
           ) : (
             <div className="flex items-center gap-2">
               <Link
+                href="/admin/login"
+                className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-secondary hover:shadow-sm"
+              >
+                Admin Login
+              </Link>
+              <Link
                 href="/login"
                 className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-secondary hover:shadow-sm"
               >
-                Sign in
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30 active:scale-95"
-              >
-                Get started
+                Client Login
               </Link>
             </div>
           )}

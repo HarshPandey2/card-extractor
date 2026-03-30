@@ -1,1 +1,2 @@
-export { ai, generateImage } from "./client";
+export { getAi, isGeminiConfigured, GeminiConfigError } from "../client";
+export { generateImage } from "./client";

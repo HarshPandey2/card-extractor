@@ -5,6 +5,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "user" | "admin";
+  isVerified: boolean;
 }
 
 interface AuthContextValue {
@@ -19,6 +20,21 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function isAuthUser(value: unknown): value is AuthUser {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.name === "string" &&
+    typeof candidate.email === "string" &&
+    (candidate.role === "user" || candidate.role === "admin") &&
+    typeof candidate.isVerified === "boolean"
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -30,6 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser) as AuthUser;
+        if (!isAuthUser(parsedUser)) {
+          throw new Error("Invalid stored auth user");
+        }
         setToken(storedToken);
         setUser(parsedUser);
       } catch {
@@ -50,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("authUser");
-    localStorage.removeItem("adminToken");
     setToken(null);
     setUser(null);
   };

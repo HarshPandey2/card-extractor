@@ -4,6 +4,7 @@ import {
   useDeleteAdminCard as useGeneratedDeleteAdminCard,
   getGetAdminCardsQueryKey,
   useGetAdminUsers as useGeneratedGetAdminUsers,
+  getGetAdminUsersQueryKey,
 } from "@workspace/api-client-react";
 
 function getAuthHeaders() {
@@ -19,6 +20,7 @@ export function useAdminCards(params: { search?: string; page?: number; limit?: 
   return useGeneratedGetAdminCards(params, {
     request: getAuthHeaders(),
     query: {
+      queryKey: getGetAdminCardsQueryKey(params),
       retry: false,
     },
   });
@@ -28,6 +30,7 @@ export function useAdminUsers() {
   return useGeneratedGetAdminUsers({
     request: getAuthHeaders(),
     query: {
+      queryKey: getGetAdminUsersQueryKey(),
       retry: false,
     },
   });

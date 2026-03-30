@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.2.0
+  version: 0.4.0
   description: Visiting Card Information Extractor API
 servers:
   - url: /api
@@ -10,7 +10,7 @@ tags:
   - name: health
     description: Health operations
   - name: auth
-    description: Authentication operations
+    description: User authentication operations
   - name: extract
     description: Card extraction operations
   - name: cards
@@ -31,42 +31,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /auth/signup:
-    post:
-      operationId: authSignup
-      tags: [auth]
-      summary: Register a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SignupRequest"
-      responses:
-        "201":
-          description: User created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "409":
-          description: Email already exists
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
   /auth/login:
     post:
       operationId: authLogin
       tags: [auth]
-      summary: Login with email and password
+      summary: Login using the pre-configured client account
       requestBody:
         required: true
         content:
@@ -140,6 +109,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /cards:
     get:
@@ -163,7 +138,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AdminCardsResponse"
+                $ref: "#/components/schemas/CardsResponse"
         "401":
           description: Unauthorized
           content:
@@ -204,6 +179,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Login as the pre-configured admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Admin login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid admin credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/cards:
     get:
       operationId: getAdminCards
@@ -230,7 +230,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AdminCardsResponse"
+                $ref: "#/components/schemas/CardsResponse"
         "401":
           description: Unauthorized
           content:
@@ -244,7 +244,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /admin/cards/{id}:
+  /admin/card/{id}:
     delete:
       operationId: deleteAdminCard
       tags: [admin]
@@ -326,22 +326,6 @@ components:
       required:
         - status
 
-    SignupRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          minLength: 6
-      required:
-        - name
-        - email
-        - password
-
     LoginRequest:
       type: object
       properties:
@@ -377,6 +361,8 @@ components:
         role:
           type: string
           enum: [user, admin]
+        isVerified:
+          type: boolean
         createdAt:
           type: string
       required:
@@ -384,6 +370,7 @@ components:
         - name
         - email
         - role
+        - isVerified
         - createdAt
 
     CardData:
@@ -451,10 +438,6 @@ components:
           type: string
         data:
           $ref: "#/components/schemas/CardData"
-        frontImageUrl:
-          type: string
-        backImageUrl:
-          type: string
         createdAt:
           type: string
       required:
@@ -462,7 +445,7 @@ components:
         - data
         - createdAt
 
-    AdminCardsResponse:
+    CardsResponse:
       type: object
       properties:
         cards:
@@ -492,6 +475,8 @@ components:
           type: string
         role:
           type: string
+        isVerified:
+          type: boolean
         cardCount:
           type: number
         createdAt:
@@ -501,6 +486,7 @@ components:
         - name
         - email
         - role
+        - isVerified
         - cardCount
         - createdAt
 

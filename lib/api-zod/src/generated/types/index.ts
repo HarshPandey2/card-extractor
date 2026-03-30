@@ -3,15 +3,15 @@
  * Do not edit manually.
  * Api
  * Visiting Card Information Extractor API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.4.0
  */
 
-export * from "./adminCardsResponse";
 export * from "./adminUserRecord";
 export * from "./adminUsersResponse";
 export * from "./authResponse";
 export * from "./cardData";
 export * from "./cardRecord";
+export * from "./cardsResponse";
 export * from "./errorResponse";
 export * from "./extractCardRequest";
 export * from "./extractCardResponse";
@@ -19,7 +19,6 @@ export * from "./getAdminCardsParams";
 export * from "./getUserCardsParams";
 export * from "./healthStatus";
 export * from "./loginRequest";
-export * from "./signupRequest";
 export * from "./successResponse";
 export * from "./userProfile";
 export * from "./userProfileRole";
