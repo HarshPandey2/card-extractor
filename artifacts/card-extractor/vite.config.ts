@@ -31,6 +31,12 @@ export default defineConfig(({ mode }) => {
     server: {
       port,
       host: "localhost",
+      proxy: {
+        "/api": {
+          target: env.VITE_API_URL?.trim() || "http://localhost:5000",
+          changeOrigin: true,
+        },
+      },
       fs: {
         strict: true,
         deny: ["**/.*"],

@@ -6,9 +6,7 @@ import "./index.css";
 const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
 const apiUrl = configuredApiUrl
   ? configuredApiUrl.replace(/\/+$/, "")
-  : import.meta.env.DEV
-    ? "http://localhost:5000"
-    : null;
+  : null;
 
 setBaseUrl(apiUrl);
 setAuthTokenGetter(() => localStorage.getItem("authToken"));

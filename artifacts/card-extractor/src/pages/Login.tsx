@@ -18,8 +18,11 @@ export default function Login() {
     e.preventDefault();
     setErrorMsg("");
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
     doLogin(
-      { data: { email, password } },
+      { data: { email: normalizedEmail, password: normalizedPassword } },
       {
         onSuccess: (res) => {
           login(res.token, {

@@ -96,8 +96,12 @@ export async function loginVerifiedUser(input: { email: string; password: string
   const normalizedPassword = input.password.trim();
 
   const user = await findUserByEmail(normalizedEmail);
-  if (!user || user.role !== "user") {
+  if (!user) {
     throw new AuthServiceError("Invalid email or password.", 401, "Unauthorized");
+  }
+
+  if (user.role !== "user") {
+    throw new AuthServiceError("This account is an admin account. Please use the admin login page.", 403, "Forbidden");
   }
 
   const passwordMatch = await bcrypt.compare(normalizedPassword, user.password);
@@ -117,8 +121,12 @@ export async function loginAdmin(input: { email: string; password: string }) {
   const normalizedPassword = input.password.trim();
 
   const user = await findUserByEmail(normalizedEmail);
-  if (!user || user.role !== "admin") {
+  if (!user) {
     throw new AuthServiceError("Invalid admin credentials.", 401, "Unauthorized");
+  }
+
+  if (user.role !== "admin") {
+    throw new AuthServiceError("This account is a client account. Please use the client login page.", 403, "Forbidden");
   }
 
   const passwordMatch = await bcrypt.compare(normalizedPassword, user.password);
