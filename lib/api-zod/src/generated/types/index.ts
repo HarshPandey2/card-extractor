@@ -13,6 +13,7 @@ export * from "./cardData";
 export * from "./cardRecord";
 export * from "./cardsResponse";
 export * from "./errorResponse";
+export * from "./exportAdminCardsParams";
 export * from "./extractCardRequest";
 export * from "./extractCardResponse";
 export * from "./getAdminCardsParams";

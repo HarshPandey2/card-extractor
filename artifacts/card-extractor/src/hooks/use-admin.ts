@@ -5,6 +5,7 @@ import {
   getGetAdminCardsQueryKey,
   useGetAdminUsers as useGeneratedGetAdminUsers,
   getGetAdminUsersQueryKey,
+  exportAdminCards,
 } from "@workspace/api-client-react";
 
 function getAuthHeaders() {
@@ -49,4 +50,21 @@ export function useDeleteAdminCard() {
       },
     },
   });
+}
+
+export async function exportAdminCardsToExcel(params?: { startDate?: string; endDate?: string; search?: string }) {
+  try {
+    const blob = await exportAdminCards(params, getAuthHeaders());
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cards-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Failed to export cards:", error);
+    throw error;
+  }
 }

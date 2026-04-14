@@ -476,6 +476,55 @@ export async function listAdminCards(options: AdminCardSearchOptions) {
   return { items, total };
 }
 
+export async function exportAdminCards(options: { startDate?: Date; endDate?: Date; search?: string }) {
+  const cards = await getCardsCollection();
+  const filter: Filter<CardDocument> = {};
+
+  if (options.search?.trim()) {
+    filter.$or = [
+      { "extractedData.name": new RegExp(escapeRegex(options.search.trim()), "i") },
+      { "extractedData.company": new RegExp(escapeRegex(options.search.trim()), "i") },
+      { "extractedData.emails": new RegExp(escapeRegex(options.search.trim()), "i") },
+      { "extractedData.phones": new RegExp(escapeRegex(options.search.trim()), "i") },
+      { name: new RegExp(escapeRegex(options.search.trim()), "i") },
+      { company: new RegExp(escapeRegex(options.search.trim()), "i") },
+      { emails: new RegExp(escapeRegex(options.search.trim()), "i") },
+      { phones: new RegExp(escapeRegex(options.search.trim()), "i") },
+    ];
+  }
+
+  if (options.startDate || options.endDate) {
+    filter.createdAt = {};
+    if (options.startDate) {
+      filter.createdAt.$gte = options.startDate;
+    }
+    if (options.endDate) {
+      filter.createdAt.$lte = options.endDate;
+    }
+  }
+
+  const items = await cards
+    .aggregate<
+      CardDocument & {
+        user?: Pick<UserDocument, "_id" | "name">[];
+      }
+    >([
+      { $match: filter },
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+    ])
+    .toArray();
+
+  return items;
+}
+
 export async function deleteAdminCard(cardId: string) {
   const cards = await getCardsCollection();
   return cards.findOneAndDelete({ _id: toObjectId(cardId) });

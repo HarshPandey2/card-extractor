@@ -176,6 +176,15 @@ export const DeleteAdminCardResponse = zod.object({
 });
 
 /**
+ * @summary Export all cards to Excel (admin only)
+ */
+export const ExportAdminCardsQueryParams = zod.object({
+  startDate: zod.date().optional(),
+  endDate: zod.date().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+/**
  * @summary Get all users (admin only)
  */
 export const GetAdminUsersResponse = zod.object({

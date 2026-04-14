@@ -283,6 +283,49 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /admin/cards/export:
+    get:
+      operationId: exportAdminCards
+      tags: [admin]
+      summary: Export all cards to Excel (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Excel file exported
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/users:
     get:
       operationId: getAdminUsers

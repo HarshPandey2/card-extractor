@@ -107,3 +107,9 @@ export type GetAdminCardsParams = {
   page?: number;
   limit?: number;
 };
+
+export type ExportAdminCardsParams = {
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+};

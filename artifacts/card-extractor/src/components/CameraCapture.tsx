@@ -13,8 +13,11 @@ export function CameraCapture({ onCapture, onCancel, label }: CameraCaptureProps
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string>("");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const startCamera = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -22,10 +25,35 @@ export function CameraCapture({ onCapture, onCancel, label }: CameraCaptureProps
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        await new Promise((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = resolve;
+          }
+        });
+        setIsLoading(false);
       }
     } catch (err) {
       console.error("Error accessing camera:", err);
-      setError("Unable to access camera. Please check permissions.");
+      // Try with default camera if environment fails
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+        });
+        setStream(mediaStream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          await new Promise((resolve) => {
+            if (videoRef.current) {
+              videoRef.current.onloadedmetadata = resolve;
+            }
+          });
+          setIsLoading(false);
+        }
+      } catch (fallbackErr) {
+        console.error("Fallback camera access failed:", fallbackErr);
+        setError("Unable to access camera. Please check permissions and ensure you're using HTTPS.");
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -95,6 +123,13 @@ export function CameraCapture({ onCapture, onCancel, label }: CameraCaptureProps
               </button>
             </div>
           </div>
+        ) : isLoading ? (
+          <div className="flex h-full items-center justify-center text-white">
+            <div className="text-center">
+              <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent mx-auto"></div>
+              <p>Starting camera...</p>
+            </div>
+          </div>
         ) : capturedImage ? (
           <img 
             src={capturedImage} 
@@ -112,7 +147,7 @@ export function CameraCapture({ onCapture, onCancel, label }: CameraCaptureProps
         )}
 
         {/* Overlay guides */}
-        {!capturedImage && !error && (
+        {!capturedImage && !error && !isLoading && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-8">
             <div className="h-[60%] w-full max-w-md rounded-xl border-2 border-white/50 border-dashed shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
           </div>

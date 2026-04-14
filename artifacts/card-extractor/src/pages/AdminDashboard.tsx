@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Search, Trash2, Mail, Phone, Building, ExternalLink, Calendar, ChevronLeft, ChevronRight, Users, User } from "lucide-react";
+import { Search, Trash2, Mail, Phone, Building, ExternalLink, Calendar, ChevronLeft, ChevronRight, Users, User, Download } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
-import { useAdminCards, useDeleteAdminCard, useAdminUsers } from "@/hooks/use-admin";
+import { useAdminCards, useDeleteAdminCard, useAdminUsers, exportAdminCardsToExcel } from "@/hooks/use-admin";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { CardRecord } from "@workspace/api-client-react";
 
@@ -24,6 +24,7 @@ export default function AdminDashboard() {
 
   const { mutate: deleteCard, isPending: isDeleting } = useDeleteAdminCard();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleDelete = (id: string) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
@@ -31,6 +32,17 @@ export default function AdminDashboard() {
     deleteCard({ id }, {
       onSettled: () => setDeletingId(null),
     });
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportAdminCardsToExcel({ search: debouncedSearch });
+    } catch (error) {
+      alert("Failed to export cards. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const formatDate = (dateStr: string) =>
@@ -88,18 +100,33 @@ export default function AdminDashboard() {
 
         {activeTab === "cards" && (
           <>
-            {/* Search */}
-            <div className="relative max-w-md w-full mb-6">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Search className="h-5 w-5 text-muted-foreground" />
+            {/* Search and Export */}
+            <div className="flex gap-4 items-center">
+              <div className="relative max-w-md w-full">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="block w-full rounded-full border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm transition-all"
+                  placeholder="Search names, companies, emails..."
+                />
               </div>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="block w-full rounded-full border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm transition-all"
-                placeholder="Search names, companies, emails..."
-              />
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center justify-center h-10 px-4 rounded-full border border-border bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors gap-2"
+                title="Export all cards to Excel"
+              >
+                {isExporting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">Export Excel</span>
+              </button>
             </div>
 
             {isError ? (

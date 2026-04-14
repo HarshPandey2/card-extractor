@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port,
-      host: "localhost",
+      host: "0.0.0.0",
       proxy: {
         "/api": {
           target: env.VITE_API_URL?.trim() || "http://localhost:5000",
@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: {
       port,
-      host: "localhost",
+      host: "0.0.0.0",
     },
   };
 });

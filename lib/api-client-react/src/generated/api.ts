@@ -21,6 +21,7 @@ import type {
   AuthResponse,
   CardsResponse,
   ErrorResponse,
+  ExportAdminCardsParams,
   ExtractCardRequest,
   ExtractCardResponse,
   GetAdminCardsParams,
@@ -791,6 +792,103 @@ export const useDeleteAdminCard = <
 > => {
   return useMutation(getDeleteAdminCardMutationOptions(options));
 };
+
+/**
+ * @summary Export all cards to Excel (admin only)
+ */
+export const getExportAdminCardsUrl = (params?: ExportAdminCardsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/cards/export?${stringifiedParams}`
+    : `/api/admin/cards/export`;
+};
+
+export const exportAdminCards = async (
+  params?: ExportAdminCardsParams,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getExportAdminCardsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportAdminCardsQueryKey = (
+  params?: ExportAdminCardsParams,
+) => {
+  return [`/api/admin/cards/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportAdminCardsQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAdminCards>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: ExportAdminCardsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof exportAdminCards>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getExportAdminCardsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof exportAdminCards>>
+  > = ({ signal }) => exportAdminCards(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAdminCards>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ExportAdminCardsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAdminCards>>
+>;
+export type ExportAdminCardsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Export all cards to Excel (admin only)
+ */
+
+export function useExportAdminCards<
+  TData = Awaited<ReturnType<typeof exportAdminCards>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: ExportAdminCardsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof exportAdminCards>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getExportAdminCardsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get all users (admin only)
